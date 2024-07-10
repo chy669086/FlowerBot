@@ -12,12 +12,13 @@ HelloMessage = """你好!我是呵呵哒，一个 Codeforces/Atcoder Duel Bot，
 账号，向其它绑定了账号的用户发起单挑，而我将作为你们的裁判。具体用法请输入 /help 。 
 我的主人是 Dynamic_Pigeon(3040313336)，有问题请 qq 咨询。
 
-github 地址：https://github.com/EternalAlexander/FlowerBot
+github 地址：https://github.com/chy669086/FlowerBot
 使用框架为 Mirai (https://github.com/mamoe/mirai) 和 Alicebot (https://docs.alicebot.dev/)。
 """
 
-VersionMessage = """最近更新于 2024/7/8
+VersionMessage = """最近更新于 2024/7/10
 增加 atc 比赛列表，使用 clist.by api，新增赛前提醒功能
+型增词云功能
 """
 
 

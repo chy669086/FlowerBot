@@ -214,7 +214,7 @@ class Schedule(Plugin):
         event = ''
         for item in result[::-1]:
             if item['start'] == result[-1]['start']:
-                event += '{}\n{}\n'.format(item['event'], item['herf'])
+                event += '{}\n{}\n'.format(item['event'], item['href'])
             else:
                 break
 
