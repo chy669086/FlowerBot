@@ -1,7 +1,6 @@
 import asyncio
 import jieba
 import numpy as np
-from pytz import utc
 
 from PIL import Image
 from matplotlib import pyplot as plt
@@ -16,9 +15,22 @@ word_file_path = MAINPATH + 'plugins/storage/wordCloud/dailyWord_{}.txt'
 image_path = MAINPATH + 'plugins/storage/wordCloud/bear.jpg'
 image_save_path = MAINPATH +  'plugins/storage/wordCloud/wordCloud.jpg'
 stop_words_path = MAINPATH + 'plugins/storage/wordCloud/hit_stopwords.txt'
-message_group_list = [930035838]
+new_words_path = MAINPATH + 'plugins/storage/wordCloud/jieba_new_word.txt'
+message_group_list_path = MAINPATH + 'plugins/storage/message_group_list.txt'
+
+message_group_list = []
 
 lock = asyncio.Lock()
+
+jieba.load_userdict(new_words_path)
+
+def load_message_group_list():
+    global message_group_list
+    with open(message_group_list_path, 'r') as file:
+        message_group_list = [int(line.strip()) for line in file]
+
+
+load_message_group_list()
 
 
 def add_to_file(path: str, words: list, group_id: int):

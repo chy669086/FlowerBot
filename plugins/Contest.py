@@ -1,15 +1,17 @@
+import asyncio
 import calendar
 import pickle
 import time
 import requests
 from alicebot import Plugin
-from DuelFrontend import to_text, lock
+from DuelFrontend import to_text
 from authconfigs import gen_quote, MAINPATH
 import matplotlib.pyplot as plt
 from datetime import datetime
 from alicebot.adapter.mirai import MiraiMessageSegment
 from alicebot.adapter.apscheduler import scheduler_decorator
 import matplotlib.dates as mdates
+from WordCloud import message_group_list
 
 from plugins.FlowerCore.account import user
 from plugins.FlowerCore.configs import STORAGE_PATH, DIFF_THRESHOLD
@@ -18,11 +20,11 @@ from plugins.FlowerCore.executer import Flower, match
 
 IMG_PATH = 'plugins//storage//output.png'
 
-message_group_list = [930035838]
-
 contest_list = {}
 
 clist_api_url = "https://clist.by/api/v4/json/contest/?resource=codeforces.com%2Catcoder.jp&filtered=false&order_by=-start&limit=40&offset=0&username=Dynamic_Pigeon&api_key=6e1a0f877f1f55496ab039759eca803c3a2c34cf"
+
+lock = asyncio.Lock()
 
 
 def get_time(t):
@@ -35,7 +37,7 @@ def get_day(t):
     return time.strftime("%Y-%m-%d(%a) %H:%M", time.gmtime(t))
 
 def get_api_time(t):
-    return time.strptime(t, '%Y-%m-%dT%X')
+    return time.strptime(t, '%Y-%m-%dT%H:%M:%S')
 
 
 def get_contest():
@@ -196,7 +198,7 @@ class UpdateContestList(Plugin):
 
 
 @scheduler_decorator(
-    trigger="interval", trigger_args={"seconds": 60}, override_rule=True
+    trigger="interval", trigger_args={"seconds": 60, 'start_date': '2024-07-10 14:00:10'}, override_rule=True
 )
 class Schedule(Plugin):
     async def handle(self) -> None:
@@ -219,30 +221,28 @@ class Schedule(Plugin):
                 break
 
         result = result[-1]
-        cur_time = calendar.timegm(get_api_time(contest['start']))
+        cur_time = calendar.timegm(get_api_time(result['start']))
         if cur_time- 3600 > now:
             return
+        mess = MiraiMessageSegment.plain('喵喵喵，选手注意') + MiraiMessageSegment.at_all() + \
+                                MiraiMessageSegment.plain('\n' + event) + \
+                                MiraiMessageSegment.plain(' 还有 {} 分钟开始'.format((cur_time- now) // 60)) + \
+                                MiraiMessageSegment.plain('\n请要参加的选手及时报名！')
         
         if cur_time- 3600 <= now <= cur_time- 3600 + 60:
             for id in message_group_list:
                 await self.bot.get_adapter("mirai").sendGroupMessage(
                     target=id, 
-                    messageChain=MiraiMessageSegment.plain('喵喵喵，选手注意') + MiraiMessageSegment.at_all() + 
-                                MiraiMessageSegment.plain('\n' + event) + 
-                                MiraiMessageSegment.plain(' 还有 {} 分钟开始'.format((cur_time- now) // 60) + 
-                                MiraiMessageSegment.plain('\n请及时报名！'))
-                    )
+                    messageChain=mess
+                )
             return
         
         if cur_time- 600 <= now <= cur_time- 600 + 60:
             for id in message_group_list:
                 await self.bot.get_adapter("mirai").sendGroupMessage(
                     target=id, 
-                    messageChain=MiraiMessageSegment.plain('喵喵喵，选手注意') + MiraiMessageSegment.at_all() + 
-                                MiraiMessageSegment.plain('\n' + event) + 
-                                MiraiMessageSegment.plain(' 还有 {} 分钟开始'.format((cur_time- now) // 60) + 
-                                MiraiMessageSegment.plain('\n请及时报名！'))
-                    )
+                    messageChain=mess
+                )
             return
         
 
