@@ -48,7 +48,9 @@ plugin_data = {
 /competiton rules：查询比赛规则''',
     'cf': '''/cf info <tar>: 获取此人的比赛记录
 /cf analyze <tar>: 获取此人的做题记录''',
-'contests': """/contests 查询比赛列表(codeforces & atcoder)"""
+'contests': """/contests 查询比赛列表(codeforces & atcoder & nowcoder)""",
+'morse': """/morse [英文]：将英文转换为摩斯密码""",
+'english': """/english [摩斯密码]：将摩斯密码转换为英文"""
 }
 
 manuel = {

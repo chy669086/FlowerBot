@@ -16,9 +16,9 @@ github 地址：https://github.com/chy669086/FlowerBot
 使用框架为 Mirai (https://github.com/mamoe/mirai) 和 Alicebot (https://docs.alicebot.dev/)。
 """
 
-VersionMessage = """最近更新于 2024/7/10
-增加 atc 比赛列表，使用 clist.by api，新增赛前提醒功能
-型增词云功能
+VersionMessage = """最近更新于 2024/7/26
+增加牛客网比赛查询功能，兼容 clist api
+新增莫斯电码功能
 """
 
 

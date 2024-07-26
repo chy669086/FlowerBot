@@ -11,6 +11,8 @@ from datetime import datetime
 from alicebot.adapter.mirai import MiraiMessageSegment
 from alicebot.adapter.apscheduler import scheduler_decorator
 import matplotlib.dates as mdates
+from bs4 import BeautifulSoup
+import urllib.request
 from WordCloud import message_group_list
 
 from plugins.FlowerCore.account import user
@@ -20,9 +22,10 @@ from plugins.FlowerCore.executer import Flower, match
 
 IMG_PATH = 'plugins//storage//output.png'
 
-contest_list = {}
+contest_list = []
 
 clist_api_url = "https://clist.by/api/v4/json/contest/?resource=codeforces.com%2Catcoder.jp&filtered=false&order_by=-start&limit=40&offset=0&username=Dynamic_Pigeon&api_key=6e1a0f877f1f55496ab039759eca803c3a2c34cf"
+nowcoder_contest_url = 'https://ac.nowcoder.com/acm/contest/vip-index'
 
 lock = asyncio.Lock()
 
@@ -34,11 +37,61 @@ def get_time(t):
 
 
 def get_day(t):
-    return time.strftime("%Y-%m-%d(%a) %H:%M", time.gmtime(t))
+    return time.strftime("%Y-%m-%d(%A) %H:%M", time.gmtime(t))
 
 def get_api_time(t):
     return time.strptime(t, '%Y-%m-%dT%H:%M:%S')
 
+
+def as_utc_time(time_str, offset = 8):
+    tm = time.strptime(time_str, "%Y-%m-%d %H:%M")
+    return calendar.timegm(tm) - offset * 3600
+
+def as_api_time(time_str, offset = 8):
+    tm = as_utc_time(time_str, offset)
+    return time.strftime("%Y-%m-%dT%H:%M:%S", time.gmtime(tm))
+
+
+
+def get_nowcoder_contest_info():
+    proxy_support = urllib.request.ProxyHandler({'http': 'localhost:7890'})
+    opener = urllib.request.build_opener(proxy_support)
+    urllib.request.install_opener(opener)
+
+    headers = {'User-Agent':'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.75 Safari/537.36'}  
+    req = urllib.request.Request(url=nowcoder_contest_url, headers=headers)  
+    page = urllib.request.urlopen(req)
+    soup = BeautifulSoup(page, 'html.parser')
+
+    info = soup.find('div', class_='platform-mod js-current')
+
+    all_contest = info.find_all('div', class_='platform-item js-item')
+
+    contest_info = []
+
+    for contest in all_contest:
+        main = contest.find('div', class_='platform-item-main')
+        cont = main.find('div', class_='platform-item-cont')
+        event = cont.find('h4').find('a').text
+        href = 'https://ac.nowcoder.com' + cont.find('h4').find('a')['href']
+        time = cont.find('ul').find('li', class_ = 'match-time-icon').text
+        time = time.split()
+        start_time = time[1] + ' ' + time[2]
+        end_time = time[4] + ' ' + time[5]
+        start = as_api_time(start_time)
+        end = as_api_time(end_time)
+        duration = as_utc_time(end_time) - as_utc_time(start_time)
+
+        info = {
+            'event': event,
+            'href': href,
+            'start': start,
+            'end': end,
+            'duration': duration
+        }
+        contest_info.append(info)
+
+    return contest_info
 
 def get_contest():
     resp = requests.get(clist_api_url)
@@ -49,6 +102,10 @@ def get_contest():
     json = resp.json()
     global contest_list
     contest_list = json['objects']
+    nowcoder_contest = get_nowcoder_contest_info()
+    contest_list += nowcoder_contest
+    contest_list.sort(key = lambda x: x['start'])
+    contest_list.reverse()
 
 
 def get_contest_list():
