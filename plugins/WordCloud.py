@@ -103,12 +103,12 @@ class MakeWordCloud(Plugin):
         async with lock:
             for id in message_group_list:
                 make_word_cloud(word_file_path.format(id), image_path, image_save_path)
+                clear_file(word_file_path, id)
                 mess = MiraiMessageSegment.plain('今日词云') + MiraiMessageSegment.image(path=image_save_path)
                 await self.bot.get_adapter("mirai").sendGroupMessage(
                     target=id, 
                     messageChain=mess
                 )
-                clear_file(word_file_path, id)
 
     async def rule(self) -> bool:
         return False

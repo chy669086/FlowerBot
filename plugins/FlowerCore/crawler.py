@@ -1,7 +1,22 @@
 import random
 import time
 import requests
+from bs4 import BeautifulSoup
+import urllib.request
+from json import loads
 from plugins.FlowerCore.configs import *
+
+
+def fetch_url_and_return_json(url):
+    proxy_support = urllib.request.ProxyHandler({'http': 'localhost:7890'})
+    opener = urllib.request.build_opener(proxy_support)
+    urllib.request.install_opener(opener)
+
+    headers = {'User-Agent':'Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.75 Safari/537.36'}  
+    req = urllib.request.Request(url=url, headers=headers)  
+    page = urllib.request.urlopen(req)
+    soup = BeautifulSoup(page, 'html.parser').text
+    return loads(soup)
 
 
 def link(problem):
@@ -16,7 +31,8 @@ def link(problem):
 
 def get_recent_submission(CF_id):
     try:
-        json = requests.get('https://codeforces.com/api/user.status?handle={:s}&from=1&count=1'.format(CF_id)).json()
+        json = fetch_url_and_return_json('https://codeforces.com/api/user.status?handle={:s}&from=1&count=1'.format(CF_id))
+        # json = requests.get('https://codeforces.com/api/user.status?handle={:s}&from=1&count=1'.format(CF_id)).json()
         print(json)
         if json['status'] == 'FAILED':
             return None
@@ -24,7 +40,7 @@ def get_recent_submission(CF_id):
             return json['result'][0]
         except IndexError:
             return None
-    except requests.exceptions.JSONDecodeError:
+    except :
         return None
 
 
@@ -44,7 +60,7 @@ def fetch_problems() -> bool:
     global problems
     for cnt in range(10):
         try:
-            problems = (requests.get('https://codeforces.com/api/problemset.problems').json())['result']['problems']
+            problems = fetch_url_and_return_json('https://codeforces.com/api/problemset.problems')['result']['problems']
             return True
         except BaseException:
             pass
@@ -69,10 +85,10 @@ def daily_problem():
 def problem_record(user):
     try:
         try:
-            d = requests.get('https://codeforces.com/api/user.status?handle=' + user, timeout=5)
-        except TimeoutError:
+            d = fetch_url_and_return_json('https://codeforces.com/api/user.status?handle=' + user)
+        except :
             return set()
-        JSON = d.json()
+        JSON = d
         if JSON['status'] != 'OK':
             return []
         res = {problem_name(x["problem"]) for x in JSON['result']}

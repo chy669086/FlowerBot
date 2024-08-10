@@ -14,6 +14,7 @@ import matplotlib.dates as mdates
 from bs4 import BeautifulSoup
 import urllib.request
 from WordCloud import message_group_list
+from plugins.FlowerCore.crawler import fetch_url_and_return_json
 
 from plugins.FlowerCore.account import user
 from plugins.FlowerCore.configs import STORAGE_PATH, DIFF_THRESHOLD
@@ -131,7 +132,7 @@ def get_contest_list():
 
 
 def get_user_contest(CF_id):
-    json = requests.get("https://codeforces.com/api/user.rating?handle={}".format(CF_id)).json()
+    json = fetch_url_and_return_json("https://codeforces.com/api/user.rating?handle={}".format(CF_id))
     if json["status"] != "OK":
         return json['comment']
     con = json['result']
@@ -166,7 +167,7 @@ def get_user_contest(CF_id):
 
 def analyze(CF_id):
     try:
-        json = requests.get("https://codeforces.com/api/user.status?handle={}".format(CF_id)).json()
+        json = fetch_url_and_return_json("https://codeforces.com/api/user.info?handles={}".format(CF_id))
     except BaseException:
         return '网络错误或其他错误'
     if json["status"] != "OK":
