@@ -167,7 +167,7 @@ def get_user_contest(CF_id):
 
 def analyze(CF_id):
     try:
-        json = fetch_url_and_return_json("https://codeforces.com/api/user.info?handles={}".format(CF_id))
+        json = fetch_url_and_return_json("https://codeforces.com/api/user.status?handle={}".format(CF_id))
     except BaseException:
         return '网络错误或其他错误'
     if json["status"] != "OK":
@@ -178,7 +178,7 @@ def analyze(CF_id):
     AC_status = []
     vis = set()
     for x in status:
-        if 'problemsetName' in x['problem'] or 'verdict' not in x.keys():
+        if 'problem' not in x.keys() or 'problemsetName' in x['problem'] or 'verdict' not in x.keys():
             continue
         if x['verdict'] == 'OK' and (str(x['problem']['contestId']) + x['problem']['index']) not in vis:
             AC_status.append(x['problem'])
