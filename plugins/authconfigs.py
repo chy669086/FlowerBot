@@ -50,7 +50,8 @@ plugin_data = {
 /cf analyze <tar>: 获取此人的做题记录''',
 'contests': """/contests 查询比赛列表(codeforces & atcoder & nowcoder)""",
 'morse': """/morse [英文]：将英文转换为摩斯密码""",
-'english': """/english [摩斯密码]：将摩斯密码转换为英文"""
+'english': """/english [摩斯密码]：将摩斯密码转换为英文""",
+'chat': """/chat [内容]：ai 对话，现模型是 gpt-4o-mini""",
 }
 
 manuel = {

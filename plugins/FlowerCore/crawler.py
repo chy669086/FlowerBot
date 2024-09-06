@@ -1,11 +1,19 @@
 import random
 import time
+import aiohttp
 import requests
 from bs4 import BeautifulSoup
 import urllib.request
 from json import loads
 from plugins.FlowerCore.configs import *
 
+async def afetch_url(url):
+    async with aiohttp.ClientSession() as session:
+        async with session.get(url) as response:
+            return await response.text()
+
+async def afetch_url_and_return_json(url):
+    return loads(afetch_url(url))
 
 def fetch_url_and_return_json(url):
     proxy_support = urllib.request.ProxyHandler({'http': 'localhost:7890'})
