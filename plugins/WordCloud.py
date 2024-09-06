@@ -100,8 +100,8 @@ def get_message(message_chain) -> list:
 )
 class MakeWordCloud(Plugin):
     async def handle(self) -> None:
-        async with lock:
-            for id in message_group_list:
+        for id in message_group_list:
+            async with lock:
                 make_word_cloud(word_file_path.format(id), image_path, image_save_path)
                 clear_file(word_file_path, id)
                 mess = MiraiMessageSegment.plain('今日词云') + MiraiMessageSegment.image(path=image_save_path)

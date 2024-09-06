@@ -14,7 +14,7 @@ import matplotlib.dates as mdates
 from bs4 import BeautifulSoup
 import urllib.request
 from WordCloud import message_group_list
-from plugins.FlowerCore.crawler import fetch_url_and_return_json
+from plugins.FlowerCore.crawler import fetch_url_and_return_json, afetch_url_and_return_json
 
 from plugins.FlowerCore.account import user
 from plugins.FlowerCore.configs import STORAGE_PATH, DIFF_THRESHOLD
@@ -94,13 +94,8 @@ def get_nowcoder_contest_info():
 
     return contest_info
 
-def get_contest():
-    resp = requests.get(clist_api_url)
-    
-    if resp.status_code != 200:
-        return
-    
-    json = resp.json()
+async def get_contest():
+    json = await afetch_url_and_return_json(clist_api_url)
     global contest_list
     contest_list = json['objects']
     nowcoder_contest = get_nowcoder_contest_info()
@@ -109,9 +104,9 @@ def get_contest():
     contest_list.reverse()
 
 
-def get_contest_list():
+async def get_contest_list():
     if len(contest_list) == 0:
-        get_contest()
+        await get_contest()
     if len(contest_list) == 0:
         return "网络错误"
     now = calendar.timegm(time.gmtime())
@@ -131,8 +126,8 @@ def get_contest_list():
     return {'title': '比赛列表', 'brief': '找到了 {} 场比赛'.format(len(result)), 'text': msg}
 
 
-def get_user_contest(CF_id):
-    json = fetch_url_and_return_json("https://codeforces.com/api/user.rating?handle={}".format(CF_id))
+async def get_user_contest(CF_id):
+    json = await afetch_url_and_return_json("https://codeforces.com/api/user.rating?handle={}".format(CF_id))
     if json["status"] != "OK":
         return json['comment']
     con = json['result']
@@ -165,9 +160,9 @@ def get_user_contest(CF_id):
     return msg
 
 
-def analyze(CF_id):
+async def analyze(CF_id):
     try:
-        json = fetch_url_and_return_json("https://codeforces.com/api/user.status?handle={}".format(CF_id))
+        json = await afetch_url_and_return_json("https://codeforces.com/api/user.status?handle={}".format(CF_id))
     except BaseException:
         return '网络错误或其他错误'
     if json["status"] != "OK":
@@ -247,7 +242,7 @@ def get_command(text):
 )
 class UpdateContestList(Plugin):
     async def handle(self) -> None:
-        get_contest()
+        await get_contest()
         print("contest 重新加载")
 
     async def rule(self) -> bool:
@@ -261,7 +256,7 @@ class UpdateContestList(Plugin):
 class Schedule(Plugin):
     async def handle(self) -> None:
         if len(contest_list) == 0:
-            get_contest()
+            await get_contest()
         if len(contest_list) == 0:
             return
         now = calendar.timegm(time.gmtime())
@@ -311,14 +306,14 @@ class Schedule(Plugin):
 
 class Contest(Plugin):
     async def handle(self):
+        await self.event.reply('正在查询比赛列表')
         async with lock:
-            await self.event.reply('正在查询比赛列表')
-            statement = get_contest_list()
-            if type(statement) == dict:
-                msg = gen_quote(statement['title'], statement['brief'], [statement['text']])
-                await self.event.reply(msg)
-            else:
-                await self.event.reply(statement)
+            statement = await get_contest_list()
+        if type(statement) == dict:
+            msg = gen_quote(statement['title'], statement['brief'], [statement['text']])
+            await self.event.reply(msg)
+        else:
+            await self.event.reply(statement)
 
     async def rule(self) -> bool:
         try:
@@ -332,35 +327,34 @@ class Contest(Plugin):
 
 class CodeForces(Plugin):
     async def handle(self):
-        async with lock:
-            message_chain = self.event.message.as_message_chain()
-            text = get_text(message_chain)
-            text = text.split()
-            text, flag = get_command(text)
-            if flag:
-                await self.event.reply("本条指令被解析为：" + ' '.join(text))
-            # print(text)
-            if len(text) < 2:
+        message_chain = self.event.message.as_message_chain()
+        text = get_text(message_chain)
+        text = text.split()
+        text, flag = get_command(text)
+        if flag:
+            await self.event.reply("本条指令被解析为：" + ' '.join(text))
+        # print(text)
+        if len(text) < 2:
+            return
+        if text[1] == 'info':
+            if len(text) < 3:
+                await self.event.reply('你是否没有at到他或者他没有绑定账号')
                 return
-            if text[1] == 'info':
-                if len(text) < 3:
-                    await self.event.reply('你是否没有at到他或者他没有绑定账号')
-                    return
-                await self.event.reply('正在查询用户参赛记录')
-                statement = get_user_contest(text[2])
-                # print(statement)
-                await self.event.reply(statement)
+            await self.event.reply('正在查询用户参赛记录')
+            statement = await get_user_contest(text[2])
+            # print(statement)
+            await self.event.reply(statement)
+            return
+        elif text[1] == 'analyze':
+            if len(text) < 3:
+                await self.event.reply('你是否没有at到他或者他没有绑定账号')
                 return
-            elif text[1] == 'analyze':
-                if len(text) < 3:
-                    await self.event.reply('你是否没有at到他或者他没有绑定账号')
-                    return
-                await self.event.reply('正在查询用户做题记录')
-                statement = analyze(text[2])
-                await self.event.reply(statement)
-                return
-            else:
-                return
+            await self.event.reply('正在查询用户做题记录')
+            statement = await analyze(text[2])
+            await self.event.reply(statement)
+            return
+        else:
+            return
             
 
     async def rule(self) -> bool:
