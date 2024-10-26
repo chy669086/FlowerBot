@@ -2,7 +2,7 @@ import asyncio
 import calendar
 import pickle
 import time
-import requests
+import structlog
 from alicebot import Plugin
 from DuelFrontend import to_text
 from authconfigs import gen_quote, MAINPATH
@@ -25,7 +25,8 @@ IMG_PATH = 'plugins//storage//output.png'
 
 contest_list = []
 
-clist_api_url = "https://clist.by/api/v4/json/contest/?resource=codeforces.com%2Catcoder.jp&filtered=false&order_by=-start&limit=40&offset=0&username=Dynamic_Pigeon&api_key=6e1a0f877f1f55496ab039759eca803c3a2c34cf"
+clist_contest = ['ac.nowcoder.com', 'codeforces.com', 'atcoder.jp']
+clist_api_url = "https://clist.by/api/v4/json/contest/?resource={}&filtered=false&order_by=-start&limit=20&offset=0&username=Dynamic_Pigeon&api_key=6e1a0f877f1f55496ab039759eca803c3a2c34cf"
 nowcoder_contest_url = 'https://ac.nowcoder.com/acm/contest/vip-index'
 
 lock = asyncio.Lock()
@@ -95,11 +96,13 @@ def get_nowcoder_contest_info():
     return contest_info
 
 async def get_contest():
-    json = await afetch_url_and_return_json(clist_api_url)
     global contest_list
-    contest_list = json['objects']
-    nowcoder_contest = get_nowcoder_contest_info()
-    contest_list += nowcoder_contest
+    contest_list = []
+    # clist 改了api，现在只能这样找
+    for contest in clist_contest:
+        url = clist_api_url.format(contest)
+        json = await afetch_url_and_return_json(url)
+        contest_list += json['objects']
     contest_list.sort(key = lambda x: x['start'])
     contest_list.reverse()
 
@@ -243,7 +246,7 @@ def get_command(text):
 class UpdateContestList(Plugin):
     async def handle(self) -> None:
         await get_contest()
-        print("contest 重新加载")
+        structlog.stdlib.get_logger().debug('Contest 更新')
 
     async def rule(self) -> bool:
         return False
@@ -341,7 +344,10 @@ class CodeForces(Plugin):
                 await self.event.reply('你是否没有at到他或者他没有绑定账号')
                 return
             await self.event.reply('正在查询用户参赛记录')
-            statement = await get_user_contest(text[2])
+            try:
+                statement = await get_user_contest(text[2])
+            except:
+                statement = '网络错误或其他错误'
             # print(statement)
             await self.event.reply(statement)
             return
@@ -350,7 +356,10 @@ class CodeForces(Plugin):
                 await self.event.reply('你是否没有at到他或者他没有绑定账号')
                 return
             await self.event.reply('正在查询用户做题记录')
-            statement = await analyze(text[2])
+            try:
+                statement = await analyze(text[2])
+            except:
+                statement = '网络错误或其他错误'
             await self.event.reply(statement)
             return
         else:
