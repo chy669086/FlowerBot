@@ -1,0 +1,13 @@
+{
+    "massgae_group_list": [
+        930035838,
+        303276211
+    ],
+    "clist_contest": [
+        "ac.nowcoder.com", "codeforces.com", "atcoder.jp"
+    ],
+    "main_path": "/home/dynamic-pigeon/FlowerBot-master/",
+    "remind_times": [
+        60, 10
+    ]
+}

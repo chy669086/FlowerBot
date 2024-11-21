@@ -7,7 +7,6 @@ import matplotlib.pyplot as plt
 from datetime import datetime
 from alicebot.adapter.mirai import MiraiMessageSegment
 import matplotlib.dates as mdates
-from WordCloud import message_group_list
 from plugins.FlowerCore.crawler import fetch_url_and_return_json, afetch_url_and_return_json
 
 from plugins.FlowerCore.configs import DIFF_THRESHOLD

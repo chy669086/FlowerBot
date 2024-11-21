@@ -1,5 +1,6 @@
 from filemanage import *
 import os
+import config
 
 self_QQ = '3809536421'
 super_admin = '3040313336'
@@ -9,11 +10,8 @@ admin_QQ = syncfrom('admin.json', ['3040313336'])
 groupauth = syncfrom('groupauth.json', {})
 
 
-MAINPATH = '/home/dynamic-pigeon/FlowerBot-master/'
-try:
-    os.listdir(MAINPATH)
-except:
-    MAINPATH = 'C:\\Users\Luhao Yan\Desktop\工程\Mirai\\alicebot-starter\\'
+MAINPATH = config.read_main_path()
+
 
 permanent = ['manage']
 
