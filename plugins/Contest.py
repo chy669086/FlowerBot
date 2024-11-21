@@ -25,7 +25,7 @@ clist_api_url = "https://clist.by/api/v4/json/contest/?resource={}&filtered=fals
 nowcoder_contest_url = 'https://ac.nowcoder.com/acm/contest/vip-index'
 
 lock = asyncio.Lock()
-
+contest_lock = asyncio.Lock()
 
 def get_time(t):
     if t >= 24 * 3600:
@@ -91,15 +91,19 @@ def get_nowcoder_contest_info():
     return contest_info
 
 async def get_contest():
-    global contest_list
-    contest_list = []
-    # clist 改了api，现在只能这样找
-    for contest in clist_contest:
-        url = clist_api_url.format(contest)
-        json = await afetch_url_and_return_json(url)
-        contest_list += json['objects']
-    contest_list.sort(key = lambda x: x['start'])
-    contest_list.reverse()
+    if contest_lock.locked():
+        async with contest_lock:
+            return
+    async with contest_lock:
+        global contest_list
+        contest_list = []
+        # clist 改了api，现在只能这样找
+        for contest in clist_contest:
+            url = clist_api_url.format(contest)
+            json = await afetch_url_and_return_json(url)
+            contest_list += json['objects']
+        contest_list.sort(key = lambda x: x['start'])
+        contest_list.reverse()
 
 
 async def get_contest_list():
@@ -183,9 +187,9 @@ class Schedule(Plugin):
         cur_time = calendar.timegm(get_api_time(result['start']))
         if cur_time- 3600 > now:
             return
-        mess = MiraiMessageSegment.plain('喵喵喵，选手注意') + MiraiMessageSegment.at_all() + \
+        mess = MiraiMessageSegment.plain('喵喵喵，选手注意') + \
                                 MiraiMessageSegment.plain('\n' + event) + \
-                                MiraiMessageSegment.plain(' 还有 {} 分钟开始'.format((cur_time- now) // 60)) + \
+                                MiraiMessageSegment.plain('还有 {} 分钟开始'.format((cur_time- now) // 60)) + \
                                 MiraiMessageSegment.plain('\n请要参加的选手及时报名！')
         
         if cur_time- 3600 <= now <= cur_time- 3600 + 60:

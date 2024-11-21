@@ -1,0 +1,10 @@
+venv/
+mcl/
+.idea/
+plugins/data/openai-config.json
+plugins/__pycache__
+start.sh
+nohup.out
+__pycache__
+start.sh
+plugins/FlowerCore/__pycache__
