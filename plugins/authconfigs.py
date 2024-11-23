@@ -1,6 +1,6 @@
 from filemanage import *
 import os
-import config
+import utils.ConfigReader as ConfigReader
 
 self_QQ = '3809536421'
 super_admin = '3040313336'
@@ -10,7 +10,7 @@ admin_QQ = syncfrom('admin.json', ['3040313336'])
 groupauth = syncfrom('groupauth.json', {})
 
 
-MAINPATH = config.read_main_path()
+MAINPATH = ConfigReader.read_main_path()
 
 
 permanent = ['manage']

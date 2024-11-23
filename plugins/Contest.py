@@ -2,7 +2,7 @@ import asyncio
 import calendar
 import pickle
 import time
-import config
+import utils.ConfigReader as ConfigReader
 import structlog
 from alicebot import Plugin
 from DuelFrontend import to_text
@@ -21,11 +21,11 @@ from plugins.FlowerCore.configs import STORAGE_PATH
 
 contest_list = []
 
-clist_contest = config.read_contest_list()
+clist_contest = ConfigReader.read_contest_list()
 clist_api_url = "https://clist.by/api/v4/json/contest/?resource={}&filtered=false&order_by=-start&limit=20&offset=0&username=Dynamic_Pigeon&api_key=6e1a0f877f1f55496ab039759eca803c3a2c34cf"
 nowcoder_contest_url = 'https://ac.nowcoder.com/acm/contest/vip-index'
 
-remind_times = config.read_remind_times()
+remind_times = ConfigReader.read_remind_times()
 
 lock = asyncio.Lock()
 contest_lock = asyncio.Lock()
@@ -188,8 +188,8 @@ class Schedule(Plugin):
 
         result = result[-1]
         cur_time = calendar.timegm(get_api_time(result['start']))
-        if cur_time- 3600 > now:
-            return
+        
+        
         mess = MiraiMessageSegment.plain('喵喵喵，选手注意') + \
                                 MiraiMessageSegment.plain('\n' + event) + \
                                 MiraiMessageSegment.plain('还有 {} 分钟开始'.format((cur_time- now) // 60)) + \

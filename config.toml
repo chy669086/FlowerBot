@@ -9,4 +9,4 @@ qq = 3809536421
 port = 23663
 
 [adapter.apscheduler]
-scheduler_config = { "apscheduler.timezone" = "Asia/Shanghai" }
+scheduler_config = { "apscheduler.timezone" = "Asia/Shanghai" , 'apscheduler.job_defaults.misfire_grace_time' = '10'}
