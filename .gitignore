@@ -9,3 +9,6 @@ __pycache__
 start.sh
 plugins/FlowerCore/__pycache__
 .venv
+plugins/storage/wordCloud/wordCloud.jpg
+test.py
+plugins/storage/wordCloud/group_message.db
