@@ -19,7 +19,7 @@ def insert(group_id: int, message: str, time: datetime.datetime = datetime.datet
     cursor.execute('''
     INSERT INTO group_message (group_id, message, time)
     VALUES (?, ?, ?)
-    ''', (group_id, message, datetime.datetime.now()))
+    ''', (group_id, message, time))
     conn.commit()
 
 # start_time and end_time are datetime objects
