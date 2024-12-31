@@ -16,8 +16,8 @@ github 地址：https://github.com/chy669086/FlowerBot
 使用框架为 Mirai (https://github.com/mamoe/mirai) 和 Alicebot (https://docs.alicebot.dev/)。
 """
 
-VersionMessage = """最近更新于 2024/11/21
-修改了一些项目的结构
+VersionMessage = """最近更新于 2024/12/31
+daily_problem 使用数据库存储
 """
 
 

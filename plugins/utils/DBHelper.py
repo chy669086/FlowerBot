@@ -1,9 +1,9 @@
 import sqlite3
 import datetime
 
-from authconfigs import MAINPATH
+from plugins.authconfigs import MAINPATH
 
-conn = sqlite3.connect(f'{MAINPATH}/plugins/storage/wordCloud/group_message.db')
+conn = sqlite3.connect(f'{MAINPATH}/plugins/data/data.db')
 
 cursor = conn.cursor()
 
@@ -12,9 +12,35 @@ CREATE TABLE IF NOT EXISTS group_message
     (group_id INTEGER, message TEXT, time TEXT)
 ''')
 
+cursor.execute('''
+CREATE TABLE IF NOT EXISTS dayliy_problem
+    (problem TEXT, time TEXT)''')
+
 cursor.close()
 
 conn.commit()
+
+def write_problem(problem: str, time: datetime.datetime = datetime.datetime.now()):
+    time_str = time.today().strftime('%Y-%m-%d')
+    cursor = conn.cursor()
+    cursor.execute('''
+    INSERT INTO dayliy_problem (problem, time)
+    VALUES (?, ?)
+    ''', (problem, time_str))
+    cursor.close()
+    conn.commit()
+
+def get_problem(time: datetime.datetime = datetime.datetime.now()):
+    time_str = time.today().strftime('%Y-%m-%d')
+    cursor = conn.cursor()
+    cursor.execute('''
+    SELECT problem FROM dayliy_problem
+    WHERE time = ?
+    ''', (time_str,))
+    problem = [x[0] for x in cursor.fetchall()]
+    cursor.close()
+    return problem
+
 
 def wirte_reconn_log():
     with open(f'{MAINPATH}/plugins/storage/wordCloud/reconn.log', 'a') as file:
@@ -22,7 +48,7 @@ def wirte_reconn_log():
 
 def reconn():
     global conn
-    conn = sqlite3.connect(f'{MAINPATH}/plugins/storage/wordCloud/group_message.db')
+    conn = sqlite3.connect(f'{MAINPATH}/plugins/data/data.db')
 
 def close():
     conn.close()

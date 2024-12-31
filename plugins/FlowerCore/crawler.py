@@ -4,8 +4,9 @@ import aiohttp
 import requests
 from bs4 import BeautifulSoup
 import urllib.request
-from json import loads
+from json import loads, dumps
 from plugins.FlowerCore.configs import *
+import plugins.utils.DBHelper as DBHelper
 
 async def afetch_url(url):
     async with aiohttp.ClientSession() as session:
@@ -79,7 +80,13 @@ def fetch_problems() -> bool:
 
 
 def daily_problem():
-    t = time.localtime(time.time())
+    res = DBHelper.get_problem()
+    if len(res) != 0:
+        text = res[0]
+        return loads(text)
+
+    t = time.localtime()
+
     if len(problems) == 0 :
         fetch_problems()
     res = []
@@ -90,7 +97,11 @@ def daily_problem():
         except KeyError:
             pass
     seed = simple_hash(t.tm_year * 1000 + t.tm_mon * 100000 * t.tm_mday) % len(res)
-    return res[seed]
+    problem = res[seed]
+
+    DBHelper.write_problem(dumps(problem))
+
+    return problem
 
 def simple_hash(s: int) -> int:
     return s ^ (s >> 11) ^ (s << 5)

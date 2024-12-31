@@ -3,7 +3,7 @@ import datetime
 import jieba
 import numpy as np
 import utils.ConfigReader as ConfigReader
-import utils.WordDBHelper as WordDBHelper
+import utils.DBHelper as WordDBHelper
 
 from PIL import Image
 from matplotlib import pyplot as plt
