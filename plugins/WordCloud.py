@@ -99,6 +99,9 @@ class MakeWordCloud(Plugin):
                     target=id, 
                     messageChain=mess
                 )
+        
+        async with lock:
+            WordDBHelper.close()
 
     async def rule(self) -> bool:
         return False
@@ -115,4 +118,7 @@ class GetMessage(Plugin):
                 add_message(message, id)
 
     async def rule(self) -> bool:
-        return self.event.adapter.name == 'mirai' and self.event.type == 'GroupMessage' and self.event.sender.group.id in message_group_list
+        return self.event.adapter.name == 'mirai' \
+            and self.event.type == 'GroupMessage' \
+            and self.event.sender.group.id in message_group_list
+    

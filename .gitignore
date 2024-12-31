@@ -12,3 +12,5 @@ plugins/FlowerCore/__pycache__
 plugins/storage/wordCloud/wordCloud.jpg
 test.py
 plugins/storage/wordCloud/group_message.db
+plugins/FlowerCore/__pycache__
+plugins/FlowerCore/account/__pycache__/

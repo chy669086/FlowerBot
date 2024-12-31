@@ -191,9 +191,9 @@ class Schedule(Plugin):
         
         
         mess = MiraiMessageSegment.plain('喵喵喵，选手注意') + \
-                                MiraiMessageSegment.plain('\n' + event) + \
-                                MiraiMessageSegment.plain('还有 {} 分钟开始'.format((cur_time- now) // 60)) + \
-                                MiraiMessageSegment.plain('\n请要参加的选手及时报名！')
+                    MiraiMessageSegment.plain('\n' + event) + \
+                    MiraiMessageSegment.plain('还有 {} 分钟开始'.format((cur_time- now) // 60)) + \
+                    MiraiMessageSegment.plain('\n请要参加的选手及时报名！')
         
         for sub_time in remind_times:
             sub_time *= 60

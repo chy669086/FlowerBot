@@ -89,9 +89,11 @@ def daily_problem():
                 res.append(x)
         except KeyError:
             pass
-    seed = (t.tm_year * 1000 + t.tm_mon * 100000 * t.tm_mday) % len(res)
+    seed = simple_hash(t.tm_year * 1000 + t.tm_mon * 100000 * t.tm_mday) % len(res)
     return res[seed]
 
+def simple_hash(s: int) -> int:
+    return s ^ (s >> 11) ^ (s << 5)
 
 def problem_record(user):
     try:

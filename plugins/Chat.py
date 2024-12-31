@@ -2,6 +2,7 @@ import asyncio
 import json
 from alicebot import Plugin
 from openai import AsyncOpenAI
+import pypandoc
 from DuelFrontend import to_text
 from authconfigs import MAINPATH, self_QQ
 import imgkit
@@ -37,8 +38,8 @@ def html_to_image(html_file, image_file):
 
 def markdown_to_image(mess: str):
     # 将Markdown文件转换为HTML
-    # extra_args = ['--from=markdown+tex_math_dollars']
-    # html_content = pypandoc.convert_text(mess, 'html', format='markdown+tex_math_dollars', outputfile=html_file, extra_args=extra_args)
+    extra_args = ['--from=markdown+tex_math_dollars']
+    html_content = pypandoc.convert_text(mess, 'html', format='markdown+tex_math_dollars', outputfile=html_file, extra_args=extra_args)
 
     html_to_image(html_file, image_file)
 
