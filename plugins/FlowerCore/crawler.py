@@ -35,8 +35,8 @@ def link(problem):
     if problem == None:
         return "找不到题目"
     try:
-        return "https://codeforces.com/problemset/problem/" + str(problem['contestId']) + '/' + str(
-            problem['index'])
+        return "https://codeforces.com/problemset/problem/" + \
+            str(problem['contestId']) + '/' + str(problem['index'])
     except KeyError:
         return str(problem)
 
@@ -59,7 +59,8 @@ def get_recent_submission(CF_id):
 def problem_name(problem, rating=False):
     try:
         if rating:
-            return str(problem['contestId']) + str(problem['index']) + '(*{:d})'.format(problem['rating'])
+            return str(problem['contestId']) + str(problem['index']) + \
+                '(*{:d})'.format(problem['rating'])
         return str(problem['contestId']) + str(problem['index'])
     except KeyError:
         return str(problem)
@@ -80,12 +81,10 @@ def fetch_problems() -> bool:
 
 
 def daily_problem():
-    res = DBHelper.get_problem()
+    res = DBHelper.get_problem(datetime.datetime.now())
     if len(res) != 0:
         text = res[0]
         return loads(text)
-
-    t = time.localtime()
 
     if len(problems) == 0 :
         fetch_problems()
@@ -96,15 +95,12 @@ def daily_problem():
                 res.append(x)
         except KeyError:
             pass
-    seed = simple_hash(t.tm_year * 1000 + t.tm_mon * 100000 * t.tm_mday) % len(res)
-    problem = res[seed]
 
-    DBHelper.write_problem(dumps(problem))
+    problem = random.choice(res)
+
+    DBHelper.write_problem(dumps(problem), datetime.datetime.now())
 
     return problem
-
-def simple_hash(s: int) -> int:
-    return s ^ (s >> 11) ^ (s << 5)
 
 def problem_record(user):
     try:
