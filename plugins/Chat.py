@@ -14,15 +14,14 @@ with open("plugins/data/openai-config.json", "r") as f:
     client = AsyncOpenAI(api_key=api_key, base_url=base_url)
 
 
-path_wk = r"/usr/bin/wkhtmltoimage"
+path_wk = "/usr/bin/wkhtmltoimage"
 md_file = MAINPATH + "plugins/data/chat.md"
-html_file = MAINPATH + "plugins/data/chat.html"
 image_file = MAINPATH + "plugins/data/chat.png"
 
 write_lock = asyncio.Lock()
 
 
-def html_to_image(html_file, image_file):
+def html_to_image(html_content, image_file):
     # 将HTML转换为图片
     options = {
         "format": "png",
@@ -31,7 +30,7 @@ def html_to_image(html_file, image_file):
         "disable-smart-width": "",
     }
     config = imgkit.config(wkhtmltoimage=path_wk)
-    imgkit.from_file(html_file, image_file, options=options, config=config)
+    imgkit.from_string(html_content, image_file, options=options, config=config)
 
 
 def markdown_to_image(mess: str):
@@ -41,11 +40,10 @@ def markdown_to_image(mess: str):
         mess,
         "html",
         format="markdown+tex_math_dollars",
-        outputfile=html_file,
         extra_args=extra_args,
     )
 
-    html_to_image(html_file, image_file)
+    html_to_image(html_content, image_file)
 
 
 locks = {}

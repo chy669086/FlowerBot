@@ -214,12 +214,12 @@ class Schedule(Plugin):
         mess = MiraiMessageSegment.plain(
             "喵喵喵，选手注意"
             f"\n{event}"
-            f"还有 {time} 分钟开始"
+            f"还有 {time // 60} 分钟开始"
             "\n请要参加的选手及时报名！"
         )
         for id in message_group_list:
             await self.bot.get_adapter("mirai").sendGroupMessage(
-                target=id, messageChain=mess
+                target=id, messageChain=[mess]
             )
 
     async def rule(self) -> bool:

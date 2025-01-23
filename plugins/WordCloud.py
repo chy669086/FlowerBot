@@ -71,11 +71,14 @@ def make_word_cloud(group_id: int, image_path: str, save_path: str):
         height=800,
         mask=img_array,
     )
-    wc.generate_from_text(string)  # 绘制图片
+    # 绘制图片
+    wc.generate_from_text(string)
 
     plt.imshow(wc)
-    plt.axis("off")  # 隐藏坐标轴
-    wc.to_file(save_path)  # 保存图片
+    # 隐藏坐标轴
+    plt.axis("off")
+    # 保存图片
+    wc.to_file(save_path)
 
 
 def get_message(message_chain) -> list:
@@ -103,9 +106,6 @@ class MakeWordCloud(Plugin):
                 await self.bot.get_adapter("mirai").sendGroupMessage(
                     target=id, messageChain=mess
                 )
-
-        async with lock:
-            WordDBHelper.close()
 
     async def rule(self) -> bool:
         return False
