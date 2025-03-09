@@ -32,7 +32,7 @@ def add_message(words: list, group_id: int):
 
 
 def clear_message(group_id: int):
-    WordDBHelper.delete_before_time(
+    WordDBHelper.delete_before(
         group_id, datetime.datetime.now() - datetime.timedelta(days=7)
     )
 
@@ -51,7 +51,12 @@ def remove_stop_words(data: list) -> list:
     return value
 
 
-def make_word_cloud(group_id: int, image_path: str, save_path: str):
+def make_word_cloud(group_id: int, image_path: str, save_path: str) -> bool:
+    """
+    生成词云
+
+    :return: bool，是否成功生成词云
+    """
     start_time = datetime.datetime.now() - datetime.timedelta(days=1, minutes=10)
     end_time = datetime.datetime.now()
 
@@ -59,6 +64,11 @@ def make_word_cloud(group_id: int, image_path: str, save_path: str):
 
     data = participle(data)
     data = remove_stop_words(data)
+
+    # 如果没有数据，则不生成词云
+    if len(data) == 1:
+        return False
+
     string = " ".join(data)
 
     img = Image.open(image_path)
@@ -79,6 +89,7 @@ def make_word_cloud(group_id: int, image_path: str, save_path: str):
     plt.axis("off")
     # 保存图片
     wc.to_file(save_path)
+    return True
 
 
 def get_message(message_chain) -> list:
@@ -96,16 +107,16 @@ class MakeWordCloud(Plugin):
     async def handle(self) -> None:
         for id in message_group_list:
             async with lock:
-                make_word_cloud(id, image_path, image_save_path)
+                if make_word_cloud(id, image_path, image_save_path):
+                    mess = MiraiMessageSegment.plain(
+                        "今日词云"
+                    ) + MiraiMessageSegment.image(path=image_save_path)
+
+                    await self.bot.get_adapter("mirai").sendGroupMessage(
+                        target=id, messageChain=mess
+                    )
+
                 clear_message(id)
-
-                mess = MiraiMessageSegment.plain(
-                    "今日词云"
-                ) + MiraiMessageSegment.image(path=image_save_path)
-
-                await self.bot.get_adapter("mirai").sendGroupMessage(
-                    target=id, messageChain=mess
-                )
 
     async def rule(self) -> bool:
         return False

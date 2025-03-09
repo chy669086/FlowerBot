@@ -8,8 +8,8 @@ from datetime import datetime
 from alicebot.adapter.mirai import MiraiMessageSegment
 import matplotlib.dates as mdates
 from plugins.FlowerCore.crawler import (
-    fetch_url_and_return_json,
-    afetch_url_and_return_json,
+    fetch_json,
+    fetch_json_async,
 )
 
 from plugins.FlowerCore.configs import DIFF_THRESHOLD
@@ -38,7 +38,7 @@ def get_command(text):
 
 
 async def get_user_contest(CF_id):
-    json = await afetch_url_and_return_json(
+    json = await fetch_json_async(
         "https://codeforces.com/api/user.rating?handle={}".format(CF_id)
     )
     if json["status"] != "OK":
@@ -87,7 +87,7 @@ async def get_user_contest(CF_id):
 
 async def analyze(CF_id):
     try:
-        json = await afetch_url_and_return_json(
+        json = await fetch_json_async(
             "https://codeforces.com/api/user.status?handle={}".format(CF_id)
         )
     except BaseException:

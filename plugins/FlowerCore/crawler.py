@@ -1,7 +1,5 @@
 import random
-import time
 import aiohttp
-import requests
 from bs4 import BeautifulSoup
 import urllib.request
 from json import loads, dumps
@@ -9,19 +7,21 @@ from plugins.FlowerCore.configs import *
 import plugins.utils.DBHelper as DBHelper
 
 
-async def afetch_url(url):
+async def fetch_url_async(url):
     async with aiohttp.ClientSession() as session:
         async with session.get(url) as response:
             return await response.text()
 
 
-async def afetch_url_and_return_json(url):
+async def fetch_json_async(url):
+    """Fetch a URL and return the JSON response with async."""
     async with aiohttp.ClientSession() as session:
         async with session.get(url) as response:
             return await response.json()
 
 
-def fetch_url_and_return_json(url):
+def fetch_json(url):
+    """Fetch a URL and return the JSON response."""
     proxy_support = urllib.request.ProxyHandler({"http": "localhost:7890"})
     opener = urllib.request.build_opener(proxy_support)
     urllib.request.install_opener(opener)
@@ -39,24 +39,16 @@ def link(problem):
     if problem == None:
         return "找不到题目"
     try:
-        return (
-            "https://codeforces.com/problemset/problem/"
-            + str(problem["contestId"])
-            + "/"
-            + str(problem["index"])
-        )
+        return f"https://codeforces.com/problemset/problem/{problem['contestId']}/{problem['index']}"
     except KeyError:
         return str(problem)
 
 
 def get_recent_submission(CF_id):
     try:
-        json = fetch_url_and_return_json(
-            "https://codeforces.com/api/user.status?handle={:s}&from=1&count=1".format(
-                CF_id
-            )
+        json = fetch_json(
+            f"https://codeforces.com/api/user.status?handle={CF_id}&from=1&count=1"
         )
-        # json = requests.get('https://codeforces.com/api/user.status?handle={:s}&from=1&count=1'.format(CF_id)).json()
         print(json)
         if json["status"] == "FAILED":
             return None
@@ -88,9 +80,9 @@ def fetch_problems() -> bool:
     global problems
     for cnt in range(10):
         try:
-            problems = fetch_url_and_return_json(
-                "https://codeforces.com/api/problemset.problems"
-            )["result"]["problems"]
+            problems = fetch_json("https://codeforces.com/api/problemset.problems")[
+                "result"
+            ]["problems"]
             return True
         except BaseException:
             pass
@@ -123,9 +115,7 @@ def daily_problem():
 def problem_record(user):
     try:
         try:
-            d = fetch_url_and_return_json(
-                "https://codeforces.com/api/user.status?handle=" + user
-            )
+            d = fetch_json("https://codeforces.com/api/user.status?handle=" + user)
         except:
             return set()
         JSON = d
@@ -138,8 +128,6 @@ def problem_record(user):
 
 
 def request_problem(tags, excluded_problems=None):
-    if excluded_problems is None:
-        excluded_problems = set()
     if len(problems) == 0:
         fetch_problems()
     assert type(tags[0]) == int
@@ -147,28 +135,25 @@ def request_problem(tags, excluded_problems=None):
     tags = tags[1:]
     result = []
     for x in problems:
-        if (not "tags" in x) or (not "rating" in x) or (not "contestId" in x):
+        if ("tags" not in x) or ("rating" not in x) or ("contestId" not in x):
             continue
-        if excluded_problems is not None:
-            if problem_name(x) in excluded_problems:
-                continue
+        if excluded_problems is not None and problem_name(x) in excluded_problems:
+            continue
         flag = 1
         for y in tags:
             if y == "not-seen":
                 continue
             if y[0] != "!":
-                if y == "new":
-                    if "contestId" in x and x["contestId"] < NEW_THRESHOLD:
-                        flag = 0
-                    continue
-                if not y in x["tags"]:
+                if y not in x["tags"] or (
+                    y == "new" and "contestId" in x and x["contestId"] < NEW_THRESHOLD
+                ):
                     flag = 0
             else:
-                if y == "!new":
-                    if "contestId" in x and x["contestId"] >= NEW_THRESHOLD:
-                        flag = 0
-                    continue
-                if y[1:] in x["tags"]:
+                if y[1:] in x["tags"] or (
+                    y[1:] == "new"
+                    and "contestId" in x
+                    and x["contestId"] >= NEW_THRESHOLD
+                ):
                     flag = 0
         if not flag:
             continue

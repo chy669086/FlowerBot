@@ -3,7 +3,6 @@ import calendar
 import pickle
 import time
 import utils.ConfigReader as ConfigReader
-import structlog
 from alicebot import Plugin
 from DuelFrontend import to_text
 from authconfigs import gen_quote
@@ -13,19 +12,19 @@ from bs4 import BeautifulSoup
 import urllib.request
 from WordCloud import message_group_list
 from plugins.FlowerCore.crawler import (
-    fetch_url_and_return_json,
-    afetch_url_and_return_json,
+    fetch_json,
+    fetch_json_async,
 )
 
 from plugins.FlowerCore.account import user
 from plugins.FlowerCore.configs import STORAGE_PATH
+from plugins.utils.ConfigReader import get_logger
 
 
 contest_list = []
 
 clist_contest = ConfigReader.read_contest_list()
 clist_api_url = "https://clist.by/api/v4/json/contest/?resource={}&filtered=false&order_by=-start&limit=20&offset=0&username=Dynamic_Pigeon&api_key=6e1a0f877f1f55496ab039759eca803c3a2c34cf"
-nowcoder_contest_url = "https://ac.nowcoder.com/acm/contest/vip-index"
 
 remind_times = ConfigReader.read_remind_times()
 
@@ -47,59 +46,6 @@ def get_api_time(t):
     return time.strptime(t, "%Y-%m-%dT%H:%M:%S")
 
 
-def as_utc_time(time_str, offset=8):
-    tm = time.strptime(time_str, "%Y-%m-%d %H:%M")
-    return calendar.timegm(tm) - offset * 3600
-
-
-def as_api_time(time_str, offset=8):
-    tm = as_utc_time(time_str, offset)
-    return time.strftime("%Y-%m-%dT%H:%M:%S", time.gmtime(tm))
-
-
-def get_nowcoder_contest_info():
-    proxy_support = urllib.request.ProxyHandler({"http": "localhost:7890"})
-    opener = urllib.request.build_opener(proxy_support)
-    urllib.request.install_opener(opener)
-
-    headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/55.0.2883.75 Safari/537.36"
-    }
-    req = urllib.request.Request(url=nowcoder_contest_url, headers=headers)
-    page = urllib.request.urlopen(req)
-    soup = BeautifulSoup(page, "html.parser")
-
-    info = soup.find("div", class_="platform-mod js-current")
-
-    all_contest = info.find_all("div", class_="platform-item js-item")
-
-    contest_info = []
-
-    for contest in all_contest:
-        main = contest.find("div", class_="platform-item-main")
-        cont = main.find("div", class_="platform-item-cont")
-        event = cont.find("h4").find("a").text
-        href = "https://ac.nowcoder.com" + cont.find("h4").find("a")["href"]
-        time = cont.find("ul").find("li", class_="match-time-icon").text
-        time = time.split()
-        start_time = time[1] + " " + time[2]
-        end_time = time[4] + " " + time[5]
-        start = as_api_time(start_time)
-        end = as_api_time(end_time)
-        duration = as_utc_time(end_time) - as_utc_time(start_time)
-
-        info = {
-            "event": event,
-            "href": href,
-            "start": start,
-            "end": end,
-            "duration": duration,
-        }
-        contest_info.append(info)
-
-    return contest_info
-
-
 async def get_contest():
     if contest_lock.locked():
         async with contest_lock:
@@ -109,7 +55,7 @@ async def get_contest():
         # clist 改了api，现在只能这样找
         for contest in clist_contest:
             url = clist_api_url.format(contest)
-            json = await afetch_url_and_return_json(url)
+            json = await fetch_json_async(url)
             con_list += json["objects"]
         con_list.sort(key=lambda x: x["start"])
         con_list.reverse()
@@ -168,7 +114,7 @@ def get_text(message_chain):
 class UpdateContestList(Plugin):
     async def handle(self) -> None:
         await get_contest()
-        structlog.stdlib.get_logger().debug("Contest 更新")
+        get_logger().debug("Contest 更新")
 
     async def rule(self) -> bool:
         return False
@@ -200,7 +146,7 @@ class Schedule(Plugin):
         for sub_time in remind_times:
             sub_time *= 60
             if cur_time - sub_time <= now <= cur_time - sub_time + 60:
-                await self.send_message(result, sub_time)
+                await self.send_message(result, sub_time // 60)
                 return
 
     async def send_message(self, res_event, time):
@@ -214,7 +160,7 @@ class Schedule(Plugin):
         mess = MiraiMessageSegment.plain(
             "喵喵喵，选手注意"
             f"\n{event}"
-            f"还有 {time // 60} 分钟开始"
+            f"还有 {time} 分钟开始"
             "\n请要参加的选手及时报名！"
         )
         for id in message_group_list:

@@ -1,4 +1,5 @@
 import json
+import structlog
 
 
 config = None
@@ -11,6 +12,12 @@ def update_config():
 
 
 update_config()
+
+logger = structlog.get_logger()
+
+
+def get_logger():
+    return logger
 
 
 def read_main_path():

@@ -11,6 +11,7 @@ with open("plugins/data/openai-config.json", "r") as f:
     config = json.load(f)
     api_key = config["api_key"]
     base_url = config["base_url"]
+    model = config["model"]
     client = AsyncOpenAI(api_key=api_key, base_url=base_url)
 
 
@@ -18,7 +19,13 @@ path_wk = "/usr/bin/wkhtmltoimage"
 md_file = MAINPATH + "plugins/data/chat.md"
 image_file = MAINPATH + "plugins/data/chat.png"
 
+# 用于创建图像，防止冲突
 write_lock = asyncio.Lock()
+# 用于实现群聊之间的锁，防止一个群聊在回答之前多次问问题
+locks = {}
+# 存储群聊信息
+chat_messages = {}
+
 
 
 def html_to_image(html_content, image_file):
@@ -46,30 +53,21 @@ def markdown_to_image(mess: str):
     html_to_image(html_content, image_file)
 
 
-locks = {}
-
-chat_messages = {}
-
-
 async def chat(text: str, group_id: int):
     if group_id not in chat_messages:
         chat_messages[group_id] = []
     messages = chat_messages[group_id]
+    if len(messages) > 20:
+        messages = messages[4:]
+
     messages.append({"role": "user", "content": text})
-    while True:
-        try:
-            completion = await client.chat.completions.create(
-                model="gpt-4o-mini", messages=messages
-            )
-            break
-        except:
-            if len(messages) == 1:
-                messages = []
-                raise Exception("牛魔的输入太长了")
-            if len(messages) > 4:
-                messages = messages[4:]
-            else:
-                messages = messages[2:]
+    try:
+        completion = await client.chat.completions.create(
+            model=model, messages=messages
+        )
+    except BaseException as e:
+        messages.pop()
+        raise e
     message = completion.choices[0].message.content
     messages.append({"role": "assistant", "content": message})
     return message
@@ -120,8 +118,9 @@ class Chat(Plugin):
 
             try:
                 response = await chat(text, self.event.sender.group.id)
-            except:
-                self.event.reply("牛魔的输入太长了")
+            except BaseException as e:
+                await self.event.reply(str(e))
+                return
             response = (
                 response.replace("\\(", "$")
                 .replace("\\)", "$")
@@ -140,3 +139,4 @@ class Chat(Plugin):
             return text.startswith("/chat") and self.event.type == "GroupMessage"
         except:
             return False
+

@@ -9,7 +9,6 @@ blacklist = syncfrom("blacklist.json", [])
 admin_QQ = syncfrom("admin.json", ["3040313336"])
 groupauth = syncfrom("groupauth.json", {})
 
-
 MAINPATH = ConfigReader.read_main_path()
 WHITE_LIST = ConfigReader.read_whitelist()
 
@@ -49,7 +48,7 @@ plugin_data = {
     "contests": """/contests 查询比赛列表(codeforces & atcoder & nowcoder)""",
     "morse": """/morse [英文]：将英文转换为摩斯密码""",
     "english": """/english [摩斯密码]：将摩斯密码转换为英文""",
-    "chat": """/chat [内容]：ai 对话，现模型是 gpt-4o-mini""",
+    "chat": """/chat [内容]：ai 对话，现模型是 deepseek v3""",
 }
 
 manuel = {

@@ -40,7 +40,7 @@ def write_problem(problem: str, time: datetime.datetime):
 
 
 def get_problem(time: datetime.datetime):
-    time_str = time.today().strftime("%Y-%m-%d")
+    time_str = time.strftime("%Y-%m-%d")
     cursor = conn.cursor()
     cursor.execute(
         """
@@ -93,10 +93,17 @@ def insert(group_id: int, message: str, time: datetime.datetime):
     conn.commit()
 
 
-# start_time and end_time are datetime objects
 def select_from_time_range(
     group_id: int, start_time: datetime.datetime, end_time: datetime.datetime
 ):
+    """
+    选择一段时间的消息列表
+
+    @param group_id: 群号
+    @param start_time: 开始时间
+    @param end_time: 结束时间
+    @return: 从开始时间到结束时间的消息列表
+    """
     check_connection()
     cursor = conn.cursor()
 
@@ -131,7 +138,7 @@ def select_all(group_id: int):
 
 
 # time is a datetime object
-def delete_before_time(group_id: int, time: datetime.datetime):
+def delete_before(group_id: int, time: datetime.datetime):
     check_connection()
     cursor = conn.cursor()
 
